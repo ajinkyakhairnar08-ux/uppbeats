@@ -45,3 +45,23 @@ Want to run UPPBEATS locally? Follow these simple steps:
 ```bash
 git clone [https://github.com/ajinkyakhairnar08-ux/uppbeats.git](https://github.com/ajinkyakhairnar08-ux/uppbeats.git)
 cd uppbeats
+
+2. Install Dependencies
+Bash
+npm install
+# or inside the subdirectories if running separate frontend/backend folders
+3. Setup Environment Variables
+Create a .env file in your root/backend directory and add your credentials:
+
+Code snippet
+YOUTUBE_API_KEY=your_youtube_data_api_v3_key_here
+PORT=5000
+4. Run the App
+Bash
+npm start
+🧑‍💻 Author
+Ajinkya Rajendra Khairnar Full-Stack Developer & MERN Specialist
+
+GitHub: @ajinkyakhairnar08-ux
+
+Portfolio: ajinkyakhairnar08-ux-ux
