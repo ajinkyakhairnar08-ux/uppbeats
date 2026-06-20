@@ -16,9 +16,9 @@ export default async function handler(req, res) {
   try {
     const r = await Promise.race([
       ytSearch(query),
-      new Promise((_, reject) => setTimeout(() => reject(new Error('timeout')), 8000))
+      new Promise((_, reject) => setTimeout(() => reject(new Error('timeout')), 4000))
     ]);
-    const videos = r.videos.slice(0, 30);
+    const videos = r.videos.slice(0, 50);
     const mapped = videos.map(v => ({
       id: v.videoId,
       title: v.title,

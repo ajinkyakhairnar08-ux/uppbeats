@@ -11,14 +11,14 @@ import FullScreenPlayer from './components/FullScreenPlayer';
 const Sidebar = () => {
   const location = useLocation();
   const navigate = useNavigate();
-  
+
   const topArtists = [
     "Arijit Singh", "The Weeknd", "Diljit Dosanjh", "AP Dhillon", "King",
     "Taylor Swift", "Drake", "Badshah", "Ed Sheeran", "Billie Eilish",
     "Post Malone", "Bruno Mars", "Dua Lipa", "Shreya Ghoshal", "Justin Bieber",
     "Rihanna", "Eminem", "Kishore Kumar", "Lana Del Rey", "Travis Scott"
   ];
-  
+
   return (
     <div style={{ width: '280px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
       <div className="glass" style={{ padding: '20px 24px' }}>
@@ -45,7 +45,7 @@ const Sidebar = () => {
           </Link>
           <button style={{ background: 'transparent', border: 'none', color: 'inherit', cursor: 'pointer' }}><Plus size={20} /></button>
         </div>
-        
+
         <div style={{ flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '12px', paddingRight: '8px' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '12px', cursor: 'pointer', padding: '8px', borderRadius: '8px', transition: 'background 0.2s' }} onMouseOver={e => e.currentTarget.style.background = '#1a1a1a'} onMouseOut={e => e.currentTarget.style.background = 'transparent'}>
             <div style={{ width: '48px', height: '48px', borderRadius: '4px', background: 'linear-gradient(135deg, #450af5, #8e8ee5)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
@@ -95,13 +95,22 @@ const TopNav = () => {
     if (debounceRef.current) clearTimeout(debounceRef.current);
 
     if (newQuery.trim()) {
-      // Generate smart suggestions from popular list + variations
-      const filtered = popularSuggestions
-        .filter(s => s.toLowerCase().includes(newQuery.toLowerCase()))
-        .slice(0, 5);
-      const extras = [newQuery, `${newQuery} songs`, `${newQuery} latest`]
-        .filter(s => !filtered.map(f => f.toLowerCase()).includes(s.toLowerCase()));
-      setSuggestions([...filtered, ...extras].slice(0, 6));
+      const callbackName = 'jsonp_yt_' + Math.round(100000 * Math.random());
+      
+      window[callbackName] = function(data) {
+        if (data && data[1]) {
+          const suggestionsList = data[1].map(item => item[0]).slice(0, 8);
+          setSuggestions(suggestionsList.length > 0 ? suggestionsList : [newQuery]);
+        }
+        delete window[callbackName];
+        const scriptElem = document.getElementById(callbackName);
+        if (scriptElem) scriptElem.remove();
+      };
+
+      const script = document.createElement('script');
+      script.id = callbackName;
+      script.src = `https://suggestqueries.google.com/complete/search?client=youtube&ds=yt&q=${encodeURIComponent(newQuery)}&jsonp=${callbackName}`;
+      document.head.appendChild(script);
 
       // Debounced full navigation to results
       debounceRef.current = setTimeout(() => {
@@ -243,7 +252,6 @@ function App() {
             </Routes>
           </div>
         </main>
-
         {/* Desktop Now Playing sidebar — hidden on mobile via CSS */}
         {currentSong && (
           <aside className="now-playing-sidebar">

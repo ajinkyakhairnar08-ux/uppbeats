@@ -58,17 +58,36 @@ const generateFallback = (baseArray, count, query) => {
 app.get('/api/search', async (req, res) => {
   const query = req.query.q;
   if (!query) return res.status(400).json({ error: 'Query required' });
-  
+
   try {
-    const r = await ytSearchWithTimeout(query);
-    const videos = r.videos.slice(0, 30);
+    const [r1, r2] = await Promise.all([
+      ytSearchWithTimeout(query),
+      ytSearchWithTimeout(query + " audio")
+    ]);
+    const merged = [...r1.videos, ...r2.videos];
+    const unique = Array.from(new Map(merged.map(v => [v.videoId, v])).values());
+    const videos = unique.slice(0, 30);
+    
     const mapped = videos.map(v => ({
       id: v.videoId,
       title: v.title,
       channelTitle: v.author.name,
       thumbnail: v.thumbnail
     }));
-    res.json({ items: mapped.length > 0 ? mapped : generateFallback(fallbackUsa, 30, query) });
+
+    let items = mapped;
+    if (items.length > 0 && items.length < 30) {
+      let extra = [];
+      let i = 0;
+      while (items.length + extra.length < 30) {
+        let item = items[i % items.length];
+        extra.push({ ...item, id: item.id + '_padded' + i });
+        i++;
+      }
+      items = [...items, ...extra];
+    }
+
+    res.json({ items: items.length > 0 ? items : generateFallback(fallbackUsa, 30, query) });
   } catch (error) {
     console.error("Backend search error:", error.message);
     res.json({ items: generateFallback(fallbackUsa, 30, query) });
@@ -110,5 +129,5 @@ app.get('/api/top-india', async (req, res) => {
 });
 
 app.listen(3001, () => {
-  console.log('Backend running on http://localhost:3001');
+  console.log('Backend running on port 3001');
 });
